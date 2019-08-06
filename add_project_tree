@@ -1,0 +1,726 @@
+This allows the user to attach a child to a parent in project
+
+From: Stephen <stephen.wachanga@bituls.com>
+
+
+---
+ erpnext/projects/doctype/project/project.js      |    7 +
+ erpnext/projects/doctype/project/project.json    |  126 ++++++++++++++++++++++
+ erpnext/projects/doctype/project/project.py      |   52 +++++++++
+ erpnext/projects/doctype/project/project_tree.js |   84 +++++++++++++++
+ 4 files changed, 268 insertions(+), 1 deletion(-)
+ create mode 100644 erpnext/projects/doctype/project/project_tree.js
+
+diff --git a/erpnext/projects/doctype/project/project.js b/erpnext/projects/doctype/project/project.js
+index faa445af94..16dd0cc303 100644
+--- a/erpnext/projects/doctype/project/project.js
++++ b/erpnext/projects/doctype/project/project.js
+@@ -76,6 +76,13 @@ frappe.ui.form.on("Project", {
+ 
+ 			frm.trigger('show_dashboard');
+ 		}
++		frm.fields_dict['parent_project'].get_query = function() {
++			return {
++				filters: {
++					"is_group": 1,
++				}
++			}
++		}
+ 	},
+ 	tasks_refresh: function (frm) {
+ 		var grid = frm.get_field('tasks').grid;
+diff --git a/erpnext/projects/doctype/project/project.json b/erpnext/projects/doctype/project/project.json
+index 5e6c6aa067..7d559433a9 100644
+--- a/erpnext/projects/doctype/project/project.json
++++ b/erpnext/projects/doctype/project/project.json
+@@ -22,6 +22,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "description": "", 
++   "fetch_if_empty": 0, 
+    "fieldname": "project_name", 
+    "fieldtype": "Data", 
+    "hidden": 0, 
+@@ -55,6 +56,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "default": "Open", 
++   "fetch_if_empty": 0, 
+    "fieldname": "status", 
+    "fieldtype": "Select", 
+    "hidden": 0, 
+@@ -89,6 +91,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "project_type", 
+    "fieldtype": "Link", 
+    "hidden": 0, 
+@@ -123,6 +126,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "is_active", 
+    "fieldtype": "Select", 
+    "hidden": 0, 
+@@ -158,6 +162,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "default": "Task Completion", 
++   "fetch_if_empty": 0, 
+    "fieldname": "percent_complete_method", 
+    "fieldtype": "Select", 
+    "hidden": 0, 
+@@ -191,6 +196,7 @@
+    "bold": 1, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "percent_complete", 
+    "fieldtype": "Percent", 
+    "hidden": 0, 
+@@ -222,6 +228,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "column_break_5", 
+    "fieldtype": "Column Break", 
+    "hidden": 0, 
+@@ -253,6 +260,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "department", 
+    "fieldtype": "Link", 
+    "hidden": 0, 
+@@ -286,6 +294,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "priority", 
+    "fieldtype": "Select", 
+    "hidden": 0, 
+@@ -320,6 +329,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "expected_start_date", 
+    "fieldtype": "Date", 
+    "hidden": 0, 
+@@ -353,6 +363,7 @@
+    "bold": 1, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "expected_end_date", 
+    "fieldtype": "Date", 
+    "hidden": 0, 
+@@ -379,6 +390,74 @@
+    "translatable": 0, 
+    "unique": 0
+   }, 
++  {
++   "allow_bulk_edit": 0, 
++   "allow_in_quick_entry": 0, 
++   "allow_on_submit": 0, 
++   "bold": 0, 
++   "collapsible": 0, 
++   "columns": 0, 
++   "default": "", 
++   "fetch_if_empty": 0, 
++   "fieldname": "is_group", 
++   "fieldtype": "Check", 
++   "hidden": 0, 
++   "ignore_user_permissions": 0, 
++   "ignore_xss_filter": 0, 
++   "in_filter": 0, 
++   "in_global_search": 0, 
++   "in_list_view": 0, 
++   "in_standard_filter": 0, 
++   "label": "Is Group", 
++   "length": 0, 
++   "no_copy": 0, 
++   "permlevel": 0, 
++   "precision": "", 
++   "print_hide": 0, 
++   "print_hide_if_no_value": 0, 
++   "read_only": 0, 
++   "remember_last_selected_value": 0, 
++   "report_hide": 0, 
++   "reqd": 0, 
++   "search_index": 0, 
++   "set_only_once": 0, 
++   "translatable": 0, 
++   "unique": 0
++  }, 
++  {
++   "allow_bulk_edit": 0, 
++   "allow_in_quick_entry": 0, 
++   "allow_on_submit": 0, 
++   "bold": 0, 
++   "collapsible": 0, 
++   "columns": 0, 
++   "fetch_if_empty": 0, 
++   "fieldname": "parent_project", 
++   "fieldtype": "Link", 
++   "hidden": 0, 
++   "ignore_user_permissions": 0, 
++   "ignore_xss_filter": 0, 
++   "in_filter": 0, 
++   "in_global_search": 0, 
++   "in_list_view": 0, 
++   "in_standard_filter": 0, 
++   "label": "Parent Project", 
++   "length": 0, 
++   "no_copy": 0, 
++   "options": "Project", 
++   "permlevel": 0, 
++   "precision": "", 
++   "print_hide": 0, 
++   "print_hide_if_no_value": 0, 
++   "read_only": 0, 
++   "remember_last_selected_value": 0, 
++   "report_hide": 0, 
++   "reqd": 0, 
++   "search_index": 0, 
++   "set_only_once": 0, 
++   "translatable": 0, 
++   "unique": 0
++  }, 
+   {
+    "allow_bulk_edit": 0, 
+    "allow_in_quick_entry": 0, 
+@@ -386,6 +465,7 @@
+    "bold": 0, 
+    "collapsible": 1, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "customer_details", 
+    "fieldtype": "Section Break", 
+    "hidden": 0, 
+@@ -419,6 +499,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "customer", 
+    "fieldtype": "Link", 
+    "hidden": 0, 
+@@ -453,6 +534,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "column_break_14", 
+    "fieldtype": "Column Break", 
+    "hidden": 0, 
+@@ -484,6 +566,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "sales_order", 
+    "fieldtype": "Link", 
+    "hidden": 0, 
+@@ -517,6 +600,7 @@
+    "bold": 0, 
+    "collapsible": 1, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "users_section", 
+    "fieldtype": "Section Break", 
+    "hidden": 0, 
+@@ -550,6 +634,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "description": "Project will be accessible on the website to these users", 
++   "fetch_if_empty": 0, 
+    "fieldname": "users", 
+    "fieldtype": "Table", 
+    "hidden": 0, 
+@@ -583,6 +668,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "sb_milestones", 
+    "fieldtype": "Section Break", 
+    "hidden": 0, 
+@@ -616,6 +702,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "tasks", 
+    "fieldtype": "Table", 
+    "hidden": 0, 
+@@ -649,6 +736,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "copied_from", 
+    "fieldtype": "Data", 
+    "hidden": 1, 
+@@ -681,6 +769,7 @@
+    "bold": 0, 
+    "collapsible": 1, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "section_break0", 
+    "fieldtype": "Section Break", 
+    "hidden": 0, 
+@@ -714,6 +803,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "notes", 
+    "fieldtype": "Text Editor", 
+    "hidden": 0, 
+@@ -747,6 +837,7 @@
+    "bold": 0, 
+    "collapsible": 1, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "section_break_18", 
+    "fieldtype": "Section Break", 
+    "hidden": 0, 
+@@ -779,6 +870,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "actual_start_date", 
+    "fieldtype": "Data", 
+    "hidden": 0, 
+@@ -811,6 +903,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "actual_time", 
+    "fieldtype": "Float", 
+    "hidden": 0, 
+@@ -843,6 +936,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "column_break_20", 
+    "fieldtype": "Column Break", 
+    "hidden": 0, 
+@@ -874,6 +968,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "actual_end_date", 
+    "fieldtype": "Date", 
+    "hidden": 0, 
+@@ -907,6 +1002,7 @@
+    "bold": 0, 
+    "collapsible": 1, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "project_details", 
+    "fieldtype": "Section Break", 
+    "hidden": 0, 
+@@ -940,6 +1036,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "estimated_costing", 
+    "fieldtype": "Currency", 
+    "hidden": 0, 
+@@ -975,6 +1072,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "description": "", 
++   "fetch_if_empty": 0, 
+    "fieldname": "total_costing_amount", 
+    "fieldtype": "Currency", 
+    "hidden": 0, 
+@@ -1008,6 +1106,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "description": "", 
++   "fetch_if_empty": 0, 
+    "fieldname": "total_expense_claim", 
+    "fieldtype": "Currency", 
+    "hidden": 0, 
+@@ -1040,6 +1139,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "total_purchase_cost", 
+    "fieldtype": "Currency", 
+    "hidden": 0, 
+@@ -1072,6 +1172,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "company", 
+    "fieldtype": "Link", 
+    "hidden": 0, 
+@@ -1104,6 +1205,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "column_break_28", 
+    "fieldtype": "Column Break", 
+    "hidden": 0, 
+@@ -1135,6 +1237,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "total_sales_amount", 
+    "fieldtype": "Currency", 
+    "hidden": 0, 
+@@ -1168,6 +1271,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "description": "", 
++   "fetch_if_empty": 0, 
+    "fieldname": "total_billable_amount", 
+    "fieldtype": "Currency", 
+    "hidden": 0, 
+@@ -1200,6 +1304,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "total_billed_amount", 
+    "fieldtype": "Currency", 
+    "hidden": 0, 
+@@ -1232,6 +1337,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "total_consumed_material_cost", 
+    "fieldtype": "Currency", 
+    "hidden": 0, 
+@@ -1264,6 +1370,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "cost_center", 
+    "fieldtype": "Link", 
+    "hidden": 0, 
+@@ -1296,6 +1403,7 @@
+    "bold": 0, 
+    "collapsible": 1, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "margin", 
+    "fieldtype": "Section Break", 
+    "hidden": 0, 
+@@ -1329,6 +1437,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "gross_margin", 
+    "fieldtype": "Currency", 
+    "hidden": 0, 
+@@ -1363,6 +1472,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "column_break_37", 
+    "fieldtype": "Column Break", 
+    "hidden": 0, 
+@@ -1394,6 +1504,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "per_gross_margin", 
+    "fieldtype": "Percent", 
+    "hidden": 0, 
+@@ -1428,6 +1539,7 @@
+    "bold": 0, 
+    "collapsible": 1, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "monitor_progress", 
+    "fieldtype": "Section Break", 
+    "hidden": 0, 
+@@ -1461,6 +1573,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "collect_progress", 
+    "fieldtype": "Check", 
+    "hidden": 0, 
+@@ -1495,6 +1608,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "depends_on": "collect_progress", 
++   "fetch_if_empty": 0, 
+    "fieldname": "holiday_list", 
+    "fieldtype": "Link", 
+    "hidden": 0, 
+@@ -1529,6 +1643,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "depends_on": "eval:doc.collect_progress == true", 
++   "fetch_if_empty": 0, 
+    "fieldname": "frequency", 
+    "fieldtype": "Select", 
+    "hidden": 0, 
+@@ -1563,6 +1678,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "depends_on": "eval:(doc.frequency == \"Hourly\" && doc.collect_progress)", 
++   "fetch_if_empty": 0, 
+    "fieldname": "from_time", 
+    "fieldtype": "Time", 
+    "hidden": 0, 
+@@ -1596,6 +1712,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "depends_on": "eval:(doc.frequency == \"Hourly\" && doc.collect_progress)", 
++   "fetch_if_empty": 0, 
+    "fieldname": "to_time", 
+    "fieldtype": "Time", 
+    "hidden": 0, 
+@@ -1629,6 +1746,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "depends_on": "eval:(doc.frequency == \"Twice Daily\" && doc.collect_progress == true)\n\n", 
++   "fetch_if_empty": 0, 
+    "fieldname": "first_email", 
+    "fieldtype": "Time", 
+    "hidden": 0, 
+@@ -1662,6 +1780,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "depends_on": "eval:(doc.frequency == \"Twice Daily\" && doc.collect_progress == true)", 
++   "fetch_if_empty": 0, 
+    "fieldname": "second_email", 
+    "fieldtype": "Time", 
+    "hidden": 0, 
+@@ -1695,6 +1814,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "depends_on": "eval:(doc.frequency == \"Daily\" && doc.collect_progress == true)", 
++   "fetch_if_empty": 0, 
+    "fieldname": "daily_time_to_send", 
+    "fieldtype": "Time", 
+    "hidden": 0, 
+@@ -1728,6 +1848,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "depends_on": "eval:(doc.frequency == \"Weekly\" && doc.collect_progress == true)", 
++   "fetch_if_empty": 0, 
+    "fieldname": "day_to_send", 
+    "fieldtype": "Select", 
+    "hidden": 0, 
+@@ -1762,6 +1883,7 @@
+    "collapsible": 0, 
+    "columns": 0, 
+    "depends_on": "eval:(doc.frequency == \"Weekly\" && doc.collect_progress == true)", 
++   "fetch_if_empty": 0, 
+    "fieldname": "weekly_time_to_send", 
+    "fieldtype": "Time", 
+    "hidden": 0, 
+@@ -1794,6 +1916,7 @@
+    "bold": 0, 
+    "collapsible": 0, 
+    "columns": 0, 
++   "fetch_if_empty": 0, 
+    "fieldname": "column_break_45", 
+    "fieldtype": "Column Break", 
+    "hidden": 0, 
+@@ -1827,6 +1950,7 @@
+    "columns": 0, 
+    "depends_on": "collect_progress", 
+    "description": "Message will sent to users to get their status on the project", 
++   "fetch_if_empty": 0, 
+    "fieldname": "message", 
+    "fieldtype": "Text", 
+    "hidden": 0, 
+@@ -1864,7 +1988,7 @@
+  "issingle": 0, 
+  "istable": 0, 
+  "max_attachments": 4, 
+- "modified": "2019-01-16 23:26:57.376682", 
++ "modified": "2019-07-09 10:57:05.653752", 
+  "modified_by": "Administrator", 
+  "module": "Projects", 
+  "name": "Project", 
+diff --git a/erpnext/projects/doctype/project/project.py b/erpnext/projects/doctype/project/project.py
+index e3fd1a8622..0c4139cdb9 100644
+--- a/erpnext/projects/doctype/project/project.py
++++ b/erpnext/projects/doctype/project/project.py
+@@ -3,6 +3,7 @@
+ 
+ from __future__ import unicode_literals
+ import frappe
++import json
+ from frappe import _
+ from six import iteritems
+ from email_reply_parser import EmailReplyParser
+@@ -593,3 +594,54 @@ def create_kanban_board_if_not_exists(project):
+ 		quick_kanban_board('Task', project, 'status')
+ 
+ 	return True
++
++@frappe.whitelist()
++def get_children(doctype, parent, project=None, task=None, is_root=False):
++
++	filters = [['docstatus', '<', '2']]
++
++	if project:
++		filters.append(['parent_project', '=', project])
++	elif parent and not is_root:
++		# via expand child
++		filters.append(['parent_project', '=', parent])
++	else:
++		filters.append(['ifnull(`parent_project`, "")', '=', ''])
++
++	# if project:
++	# 	filters.append(['project', '=', project])
++
++	tasks = frappe.get_list(doctype, fields=[
++		'name as value',
++		'project_name as title',
++		'is_group as expandable'
++	], filters=filters, order_by='name')
++
++	# return tasks
++	return tasks
++
++@frappe.whitelist()
++def add_node():
++	from frappe.desk.treeview import make_tree_args
++	args = frappe.form_dict
++	args.update({
++		"name_field": "project_name"
++	})
++	args = make_tree_args(**args)
++
++	if args.parent_project == 'All Projects':
++		args.parent_project = None
++
++	frappe.get_doc(args).insert()
++
++@frappe.whitelist()
++def add_multiple_tasks(data, parent):
++	data = json.loads(data)
++	new_doc = {'doctype': 'Project', 'parent_project': parent if parent!="All Projects" else ""}
++	# new_doc['project'] = frappe.db.get_value('Task', {"name": parent}, 'project') or ""
++
++	for d in data:
++		if not d.get("project_name"): continue
++		new_doc['project_name'] = d.get("project_name")
++		new_task = frappe.get_doc(new_doc)
++		new_task.insert()
+\ No newline at end of file
+diff --git a/erpnext/projects/doctype/project/project_tree.js b/erpnext/projects/doctype/project/project_tree.js
+new file mode 100644
+index 0000000000..94348e711a
+--- /dev/null
++++ b/erpnext/projects/doctype/project/project_tree.js
+@@ -0,0 +1,84 @@
++frappe.provide("frappe.treeview_settings");
++
++frappe.treeview_settings['Project'] = {
++	get_tree_nodes: "erpnext.projects.doctype.project.project.get_children",
++	add_tree_node: "erpnext.projects.doctype.project.project.add_node",
++	filters: [
++		// {
++		// 	fieldname: "project",
++		// 	fieldtype:"Link",
++		// 	options: "Project",
++		// 	label: __("Project"),
++		// },
++		{
++			fieldname: "project",
++			fieldtype:"Link",
++			options: "Project",
++			label: __("Project"),
++			get_query: function() {
++				var me = frappe.treeview_settings['Project'];
++				var project = me.page.fields_dict.project.get_value();
++				var args = [["Project", 'is_group', '=', 1]];
++				// if(project){
++				// 	args.push(["Task", 'project', "=", project]);
++				// }
++				return {
++					filters: args
++				};
++			}
++		}
++	],
++	// breadcrumb: "Projects",
++	get_tree_root: false,
++	root_label: "All Projects",
++	ignore_fields: ["parent_project"],
++	onload: function(me) {
++		frappe.treeview_settings['Project'].page = {};
++		$.extend(frappe.treeview_settings['Project'].page, me.page);
++		me.make_tree();
++	},
++	toolbar: [
++		{
++			label:__("Add Multiple"),
++			condition: function(node) {
++				return node.expandable;
++			},
++			click: function(node) {
++				this.data = [];
++				const dialog = new frappe.ui.Dialog({
++					title: __("Add Multiple Tasks"),
++					fields: [
++						{
++							fieldname: "multiple_projects", fieldtype: "Table",
++							in_place_edit: true, data: this.data,
++							get_data: () => {
++								return this.data;
++							},
++							fields: [{
++								fieldtype:'Data',
++								fieldname:"project_name",
++								in_list_view: 1,
++								reqd: 1,
++								label: __("Project Name")
++							}]
++						},
++					],
++					primary_action: function() {
++						dialog.hide();
++						return frappe.call({
++							method: "erpnext.projects.doctype.project.project.add_multiple_tasks",
++							args: {
++								data: dialog.get_values()["multiple_projects"],
++								parent: node.data.value
++							},
++							callback: function() { }
++						});
++					},
++					primary_action_label: __('Create')
++				});
++				dialog.show();
++			}
++		}
++	],
++	extend_toolbar: true
++};
+\ No newline at end of file
